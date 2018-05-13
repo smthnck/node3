@@ -1,0 +1,345 @@
+extends layout
+block content
+    script.
+        var selected = [];
+        var dum = !{JSON.stringify(dummy)};
+    #map
+    #sidebar
+        h1 OD Analysis
+        button.buttonBlue(onclick='toggleFreeDraw()') Free Draw
+        h3 Time Span
+        #container
+            #slider
+        //#leftvalue
+        //#rightvalue
+        #valueleft
+        br
+        br
+        form(action='/:filter/:loc')
+            label(style='font-weight:bold') Zone Type
+            ='     '
+            select(name='loc')
+                option(disabled='',selected='',value='') Origin/Destination
+                option(value='1') Origin
+                option(value='0') Destination
+                //input(type='checkbox',value='1',name='loc')
+            #boxy
+            br
+            button.buttonGreen(type="submit", name='name',id='selector') SUBMIT
+        form(action='/')
+            button.buttonRed(type='submit') RESET
+        br
+        br
+        #legend
+            h3 Legend (trips)
+            #one
+            #two
+            #three
+            #four
+        br
+        #read
+            h1 !{read}
+        br
+        br
+        #info-box
+        
+
+    script.
+        var myData = !{JSON.stringify(jsonData)};
+        var hoverID;
+        var clickID;
+        var test = { polygon: [] };
+        //const seenPolygons = [];
+        var features=myData.features;
+        console.log(features);
+        if(dum===1){
+            var list = {one:[],two:[],three:[],four:[]};
+            var listL = Object.keys(list).length;
+            var list2 = {one:[],two:[],three:[],four:[]};
+            //console.log('list:',Object.keys(list).length);
+            for(var key in list){  
+                for(j=0;j<features.length;j++){
+                    var tile = features[j]['properties'].f3;
+                    var cnt = features[j]['properties'].f2;
+                    switch(tile){
+                            case 1:
+                                list.one.push(cnt);
+                                break;
+                            case 2:
+                                list.two.push(cnt);
+                                break;
+                            case 3:
+                                list.three.push(cnt);
+                                break;
+                            case 4:
+                                list.four.push(cnt);
+                                break;
+                            case null:
+                            break;
+                    }
+                }
+                list2[key].push(Math.min(...list[key]) + '-' + Math.max(...list[key]));
+                if(list2[key] != 'Infinity--Infinity'){
+                    document.getElementById(key).innerHTML=(list2[key]);
+                } else {
+                    document.getElementById(key).innerHTML=(0);}
+                }
+            console.log(list2);
+        } else {
+            document.getElementById('legend').style.visibility = "hidden";
+        }
+        var slider = document.getElementById('slider'),
+            leftValue = document.getElementById('leftvalue'),
+            rightValue = document.getElementById('rightvalue'),
+            valueleft = document.getElementById('valueleft');
+      
+        noUiSlider.create(slider, {
+            start: [6, 12],
+            connect: true,
+            margin:1,
+            step:1,
+            range: {
+                'min': 6,
+                'max': 30
+            }
+        });
+
+        slider.noUiSlider.on('update', function() {
+            var time = [];
+            //leftValue.innerHTML = slider.noUiSlider.get()[0];
+            //rightValue.innerHTML = slider.noUiSlider.get()[1];
+            time.push(slider.noUiSlider.get()[0] + ' and ' + slider.noUiSlider.get()[1]);
+            valueleft.innerHTML = time;
+            });
+        
+        //var selected = [];
+        // Create variable to hold map element, give initial settings to map
+        var map = L.map('map').setView([41.838738, -87.599380], 11);
+        // Add OpenStreetMap tile layer to map element
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'}).addTo(map);
+        // Add JSON to map
+        // add an OpenStreetMap tile layer 
+        document.getElementById('info-box').style.visibility = "hidden";
+        function toggleFreeDraw(){
+            var freeDraw = new FreeDraw({
+                mode: FreeDraw.ALL
+                });
+            map.addLayer(freeDraw);
+        
+            const seenPolygons = [];
+            var obj = {};
+            freeDraw.on('markers', function getMarkers(eventData) {
+                var test = { polygon: [] };
+                var innerPoly = [];
+                var list = [];
+                var latestPolygon = eventData.latLngs.filter(function(latLngs) {
+                    const json = JSON.stringify(latLngs);
+                    const has  = !~seenPolygons.indexOf(json);
+                    (has) && seenPolygons.push(json);
+                    (has) && innerPoly.push(json);
+                    return has;
+                });
+
+                if(innerPoly.length===0){
+                    obj=JSON.parse(seenPolygons[seenPolygons.length-1]);
+                    for(var p=0;p<(obj.length);p++){
+                        list.push(Object.values(obj[p]));
+                        }
+                }else{
+                    obj=JSON.parse(innerPoly);
+                    for(var f=0;f<(obj.length);f++){
+                        var coord = Object.values(obj[f])
+                        list.push(coord.reverse());
+                        }
+                }
+                //for(k=0;k<list.length;k++){}
+                test.polygon.push(list);
+                
+                console.log('obj:',obj);
+                console.log('1:',list);
+                console.log('test:',test);
+                var geoPoly = GeoJSON.parse(test,{'Polygon': 'polygon'});
+                console.log(geoPoly);
+                for (var j=0; j<features.length; j++){
+                        var pols = turf.booleanDisjoint(geoPoly,features[j]);
+                        if (!pols){
+                            selected.push(features[j]['properties']['f1'].toString());
+                            console.log(pols);
+                            document.getElementById('boxy').innerHTML=(selected.length + ' zones');
+                            console.log(selected);
+                            document.getElementById('selector').value=(selected);
+                        }
+                    }
+                myLayer.eachLayer(function(layer) {
+                var select0 = layer.feature.properties.f1.toString();
+                if(selected.indexOf(select0)>-1){
+                    layer.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                }
+            });    
+            });
+        }
+        
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+ 
+        // Initialise the draw control and pass it the FeatureGroup of editable layers 
+        var drawControl = new L.Control.Draw({
+            draw: {
+                polyline: false,
+                marker: false,
+                circle: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+        map.on('draw:created', function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+            if (type === 'polygon') {
+                drawnItems.addLayer(layer);
+                var selPoly=layer.toGeoJSON();
+                features=myData.features;
+                layer.bindPopup('A popup!');
+                console.log('selP:',selPoly);
+                console.log(features);
+                for (var i=0; i<features.length; i++){
+                    var pols = turf.booleanDisjoint(selPoly,features[i]);
+                    if (!pols){
+                        selected.push(features[i]['properties']['f1'].toString());
+                        console.log(pols);
+                        document.getElementById('boxy').innerHTML=(selected.length + ' zones');
+                        console.log(selected);
+                        document.getElementById('selector').value=(selected);
+                    }
+                }
+            }
+            myLayer.eachLayer(function(layer) {
+                var select0 = layer.feature.properties.f1.toString();
+                if(selected.indexOf(select0)>-1){
+                    layer.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                }
+            });
+        });
+        
+        var myLayer = L.geoJson(myData,{
+            style: function(feature){
+                        
+                        var colors =['#000000','#ffbd84','#f47461','#cb2f44','#8b0000'];
+                        if(dum===1){
+                            if (feature.properties.f4===1 &&feature.properties.f2>0) {
+                                    return{
+                                    fillColor: colors[feature.properties.f3],
+                                    color: '#0a48ce',
+                                    weight:1,
+                                    opacity:1,
+                                    fillOpacity:.75
+                                };}
+                            else if (feature.properties.f4===1 && feature.properties.f2<1) {
+                                return{
+                                fillColor: colors[feature.properties.f3],
+                                color: '#0a48ce',
+                                weight:1,
+                                opacity:1,
+                                fillOpacity:.2
+                                };}    
+                            else if (feature.properties.f2>0){
+                                return{
+                                    fillColor: colors[feature.properties.f3],
+                                    color: colors[feature.properties.f3],
+                                    opacity:1,
+                                    weight:1,
+                                    fillOpacity:.75};
+                            }else if(feature.properties.f2<1 && feature.properties.f4!=1){
+                                return{
+                                    fillColor: '#000000',
+                                    color: '#ffffff',
+                                    weight:1.5,
+                                    opacity:.2,
+                                    fillOpacity:.2};}
+                            }else {
+                                return{
+                                    fillColor: '#000000',
+                                    color: '#ffffff',
+                                    weight:1.5,
+                                    opacity:.2,
+                                    fillOpacity:.2};
+                            }
+                    },
+                        
+            onEachFeature: function (feature, layer) {
+                //var select0 = feature.properties.f1.toString();
+
+                layer.on('click', function() {
+                    var select1 = feature.properties.f1.toString();
+                    if(selected.indexOf(select1)>-1){
+                        var index = selected.indexOf(select1);
+                        selected.splice(index,1);
+                        myLayer.resetStyle(this);
+                        
+                   }else{
+                         selected.push(select1.toString());
+                         this.setStyle({
+                             fillColor:'#ff0000',
+                             color:'#ff0000',
+                             weight:6,
+                             opacity:1
+                         });
+                     };
+                    document.getElementById('boxy').innerHTML=(selected.length + ' zones');
+                    console.log(selected);
+                    document.getElementById('selector').value=(selected);
+                });
+                
+                layer.on('mouseover', function() {
+                    document.getElementById('info-box').style.visibility = "visible";
+                    if(dum===1){ 
+                        document.getElementById('info-box').innerHTML=("<b>Zone: </b>" + feature.properties.f1.toString() + "<br><b> Trips: </b>" + feature.properties.f2.toString());
+                    }else{
+                        document.getElementById('info-box').innerHTML=("<b>Zone: </b>" + feature.properties.f1.toString() + "<br><b> Area: </b>" + feature.properties.f2.toString());
+                    }
+                    if(selected.indexOf(feature.properties.f1.toString())>-1){
+                        this.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                    }else{
+                         this.setStyle({
+                            fillColor: '#0a1bd3',
+                            color:'#0a1bd3',
+                            weight:6,
+                            opacity:1
+                        });
+                     }
+                    });
+                layer.on('mouseout',function(){
+                    document.getElementById('info-box').style.visibility = "hidden";
+                    //layer.bindPopup(feature.properties.f3.toString() + "," + feature.properties.f2.toString(),{offset:new L.Point(-25,-20)}).closePopup();
+                    if(selected.indexOf(feature.properties.f1.toString())>-1){
+                        this.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                    }else{
+                         myLayer.resetStyle(this);
+                        };
+                     });
+            }
+        }).addTo(map);
+

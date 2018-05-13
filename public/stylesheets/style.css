@@ -1,0 +1,175 @@
+body {
+  position: fixed;
+  top:0 ;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  padding-bottom: 5px;
+}
+
+#map {
+  width: 100%;
+  height: 98%;
+  left:0%;
+  position:relative;
+  
+}
+
+#container {
+  padding: 20px;
+}
+
+#map.mode-create {
+    cursor: crosshair;
+}
+
+path.leaflet-line {
+    stroke: #0a48ce;
+    stroke-width: 2;
+}
+
+#sidebar {
+    width: 20%;
+    height: 100%;
+    top: 0;
+    right: 0%;
+    background-color: white;
+    z-index: 1000;
+    position: absolute;
+    padding: 5px 15px;
+    cursor: default; 
+    overflow:auto;
+}
+#boxy {
+  color:#000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:18px;
+  line-height:18px;
+  border-radius:3px;
+  max-height:80%;
+  overflow:auto;
+}
+#read{
+  color:#000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:10px;
+  line-height:18px;
+  border-radius:3px;
+  max-height:80%;
+  overflow:auto;
+}
+
+#legend{
+  width:250px;
+  height:50px;
+}
+#one{
+  background-color:#ffbd84;
+  width:50px;
+  height:20px;
+  float:left;
+  text-align: center;
+  vertical-align: middle;
+  overflow:visible;
+}
+#two{
+  background-color:#f47461;
+  width:50px;
+  height:20px;
+  float:left;
+  text-align: center;
+  vertical-align: middle;
+  overflow:visible;
+}
+#three{
+  background-color:#cb2f44;
+  width:50px;
+  height:20px;
+  float:left;
+  text-align: center;
+  vertical-align: middle;
+  overflow:visible;
+}
+#four{
+  background-color:#8b0000;
+  width:50px;
+  height:20px;
+  float:left;
+  text-align: center;
+  vertical-align: middle;
+  overflow:visible;
+}
+
+.buttonGreen {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.buttonBlue {
+    background-color: #008CBA;
+    border: none;
+    color: white;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+} /* Blue */
+.buttonRed {
+    background-color: #f44336;
+    border: none;
+    color: white;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+} /* Red */ 
+.buttonGray {
+    background-color: #e7e7e7; 
+    border: none;
+    color: white;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+} /* Gray */ 
+.buttonBlack {background-color: #555555;} /* Black */
+.buttonBlue:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+.buttonGreen:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+.buttonGray:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+.buttonRed:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+#info-box{
+    border-style: solid;
+}
+
+.leaflet-control-container {
+    position: absolute;
+    right: 480px;
+} 
+
+

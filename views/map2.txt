@@ -1,0 +1,178 @@
+extends layout
+block content
+    script.
+        var selected = [];
+    form(action='/:filter/:loc')
+        button(type="submit", name='name',id='selector') here
+        select(name='loc')
+            option(disabled='',selected='',value='') Origin/Destination
+            option(value='1') Origin
+            option(value='0') Destination
+            //input(type='checkbox',value='1',name='loc')
+    form(action='/map')
+        button(type='submit') reset
+    #map
+    #boxy
+    #read
+        h1 !{JSON.stringify(read)}
+
+    script.
+        var myData = !{JSON.stringify(jsonData)};
+        var dum = !{JSON.stringify(dummy)};
+        var hoverID;
+        var clickID;
+        //var selected = [];
+        // Create variable to hold map element, give initial settings to map
+        var map = L.map('map',{drawControl: true}).setView([41.830585, -87.646093], 11); //{ center: [41.830585[41.830585, -87.646093], zoom: 11, -87.646093], zoom: 11}
+        // Add OpenStreetMap tile layer to map element
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'}).addTo(map);
+        // Add JSON to map
+        // add an OpenStreetMap tile layer 
+ 
+        // Initialise the FeatureGroup to store editable layers 
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+ 
+        // Initialise the draw control and pass it the FeatureGroup of editable layers 
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        //map.addControl(drawControl);
+        map.on('draw:created', function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+            if (type === 'polygon') {
+                drawnItems.addLayer(layer);
+                var selPoly=layer.toGeoJSON();
+                features=myData.features;
+                layer.bindPopup('A popup!');
+                console.log(selPoly);
+                console.log(features);
+                for (var i=0; i<features.length; i++){
+                    var pols = turf.booleanContains(selPoly,features[i]);
+                    if (pols){
+                        selected.push(features[i]['properties']['f1'].toString());
+                        console.log(pols);
+                        document.getElementById('boxy').innerHTML=(selected);
+                        console.log(selected);
+                        document.getElementById('selector').value=(selected);
+                    }
+                }
+            }
+        });
+        var myLayer = L.geoJson(myData,{
+            style: function(feature){
+                        
+                        var colors =['#000000','#ffbd84','#f47461','#cb2f44','#8b0000'];
+                        if(dum===1){
+                            if (feature.properties.f4===1 &&feature.properties.f2>0) {
+                                    return{
+                                    fillColor: colors[feature.properties.f3],
+                                    color: '#0a48ce',
+                                    weight:5,
+                                    opacity:1,
+                                    fillOpacity:.75
+                                };}
+                            else if (feature.properties.f4===1 && feature.properties.f2<1) {
+                                return{
+                                fillColor: colors[feature.properties.f3],
+                                color: '#0a48ce',
+                                weight:5,
+                                opacity:1,
+                                fillOpacity:.2
+                                };}    
+                            else if (feature.properties.f2>0){
+                                return{
+                                    fillColor: colors[feature.properties.f3],
+                                    color: colors[feature.properties.f3],
+                                    opacity:1,
+                                    weight:2,
+                                    fillOpacity:.75};
+                            }else if(feature.properties.f2<1 && feature.properties.f4!=1){
+                                return{
+                                    fillColor: '#000000',
+                                    color: '#ffffff',
+                                    weight:1.5,
+                                    opacity:.2,
+                                    fillOpacity:.2};}
+                            }else {
+                                return{
+                                    fillColor: '#000000',
+                                    color: '#ffffff',
+                                    weight:1.5,
+                                    opacity:.2,
+                                    fillOpacity:.2};
+                            }
+                    },
+                        
+            onEachFeature: function (feature, layer) {
+                //var select0 = feature.properties.f1.toString();
+                if(selected.indexOf(feature.properties.f1.toString())>-1){
+                    feature.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1});
+                        console.log(selected[i]);
+                }
+                layer.on('click', function() {
+                    var select1 = feature.properties.f1.toString();
+                    if(selected.indexOf(select1)>-1){
+                        var index = selected.indexOf(select1);
+                        selected.splice(index,1);
+                        myLayer.resetStyle(this);
+                        
+                   }else{
+                         selected.push(select1.toString());
+                         this.setStyle({
+                             fillColor:'#ff0000',
+                             color:'#ff0000',
+                             weight:6,
+                             opacity:1
+                         });
+                     };
+                    document.getElementById('boxy').innerHTML=(selected);
+                    console.log(selected);
+                    document.getElementById('selector').value=(selected);
+                });
+                
+                layer.on('mouseover', function() {
+                    if(dum===1){
+                        layer.bindPopup("Zone: " + feature.properties.f1.toString() + ", Trips: " + feature.properties.f2.toString(),{offset:new L.Point(-25,-20)}).openPopup();
+                    }else{
+                        layer.bindPopup("Zone: " + feature.properties.f1.toString() + ", Area: " + feature.properties.f2.toString(),{offset:new L.Point(-25,-20)}).openPopup();
+                    }
+                    if(selected.indexOf(feature.properties.f1.toString())>-1){
+                        this.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                    }else{
+                         this.setStyle({
+                            fillColor: '#0a1bd3',
+                            color:'#0a1bd3',
+                            weight:6,
+                            opacity:1
+                        });
+                     }
+                    });
+                layer.on('mouseout',function(){
+                    layer.bindPopup(feature.properties.f3.toString() + "," + feature.properties.f2.toString(),{offset:new L.Point(-25,-20)}).closePopup();
+                    if(selected.indexOf(feature.properties.f1.toString())>-1){
+                        this.setStyle({
+                        fillColor:'#ff0000',
+                        color:'#ff0000',
+                        weight:6,
+                        opacity:1
+                    });
+                    }else{
+                         myLayer.resetStyle(this);
+                        };
+                     });
+            }
+        }).addTo(map);
+
